@@ -1,12 +1,84 @@
 ---
-title: "Hands-on Exercise 1"
+title: "Hands-on Exercise 1: Spatial Weights and Applications"
 editor: visual
 ---
 
-## Overview
+## 1.1 Overview
 
-This is the overview paragraph
+In this hands-on excercise, I learn how to import and wrangling geospatial data using appropriate R packages.
 
-## Getting Started
+## 1.2 Getting Started
 
-This is getting start paragraph
+The code chunk below install and load sf and tidyverse packages in R environment.
+
+```{r}
+pacman::p_load(sf, tidyverse)
+```
+
+## 1.3 Import Geospatial Data:
+
+We have learnt how to import data using st_read. the following data are getting imported:
+
+1.  **MP14_SUBZONE_WEB_PL**, a polygon feature layer in ESRI shapefile format
+
+```{r}
+mpsz = st_read(dsn = "Hands-on_Ex1/data/geospatial", 
+                  layer = "MP14_SUBZONE_WEB_PL")
+```
+
+2.  **CyclingPath**, a line feature layer in ESRI shapefile format
+
+```{r}
+cyclingpath = st_read(dsn = "Hands-on_Ex1/data/geospatial", 
+                         layer = "CyclingPathGazette")
+```
+
+2.  **PreSchool**, a point feature layer in kml file format
+
+```{r}
+preschool = st_read("Hands-on_Ex1/data/geospatial/pre-schools-location-kml.kml")
+```
+
+here we got to know about the data, coordinate reference system each data set is about.
+
+## 1.4 Checking the Content of A Simple Feature Data Frame
+
+```{r}
+st_geometry(mpsz)
+```
+
+```{r}
+glimpse(mpsz)
+```
+
+```{r}
+tail(mpsz, n =5)
+```
+
+```{r}
+head(mpsz, n=5)  
+```
+
+| st_geometry()                             | Glimpse()                                                                             | head() and tail()                                                       |
+|---------------------|------------------------------|----------------------|
+| It prints the basic geometry informations | Lets you have a look at the data frame and fields are all in double-precision values. | Returns the first or last parts of a vector, matrix, table, data frame. |
+
+## 1.5 Plotting the Geospatial Data
+
+```{r}
+plot(mpsz)
+```
+
+```{r}
+plot(st_geometry(mpsz))
+```
+
+```{r}
+plot(mpsz["PLN_AREA_N"])
+```
+
+```{r}
+plot(mpsz["SUBZONE_NO"])
+```
+
+We have used

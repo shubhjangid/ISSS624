@@ -1,9 +1,26 @@
 ---
-title: "About"
+title: "About "
 ---
 
-About this site
+## About this site
 
-```{r}
-1 + 1
-```
+We are currently using this website to learn Applied Geospatial Analytics. **Geospatial** **analysis** is an approach to applying statistical analysis and other informational techniques to data which has a geographical or geospatial aspect.
+
+This is a learning journey, it will be updated every week.
+
+## Under the Guidance of Prof. Kam Tin Seong
+
+Prof Kam is a faculty in Singapore management university. His qualification includes PhD, University of London, 1995. He has been teaching the following topics.
+
+Computer as an Analysis Tool\
+Geospatial Analytics for Business Intelligence\
+Guided Research in Information Systems\
+Visual Analytics for Business Intelligence\
+Data Analytics Lab
+
+### Research Interests
+
+Leveraging the power of Geospatial Analytics and GeoVisual Analytics to enhance business intelligence.\
+Analytics for data-driven business decision.\
+Building geospatial analytics toolkit by integrating spatial statistics, ESDA, and spatial modeling techniques.\
+Knowledge discovery using interactive and visual analytics tool.
