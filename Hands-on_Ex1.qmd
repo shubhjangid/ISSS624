@@ -1,5 +1,5 @@
 ---
-title: "Hands-on Exercise 1: Spatial Weights and Applications"
+title: "Hands-on Exercise 1: Geospatial Data Wrangling with R"
 editor: visual
 ---
 
