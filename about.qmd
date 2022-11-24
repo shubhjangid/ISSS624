@@ -8,19 +8,16 @@ We are currently using this website to learn Applied Geospatial Analytics. **Geo
 
 This is a learning journey, it will be updated every week.
 
-## Under the Guidance of Prof. Kam Tin Seong
+## Under the Guidance:
 
-Prof Kam is a faculty in Singapore management university. His qualification includes PhD, University of London, 1995. He has been teaching the following topics.
+![](images/prof%20kam.png)
 
-Computer as an Analysis Tool\
-Geospatial Analytics for Business Intelligence\
-Guided Research in Information Systems\
-Visual Analytics for Business Intelligence\
-Data Analytics Lab
+## Student profile:
 
-### Research Interests
+Name: Shubhanshi Radhey Shyam Jangid
 
-Leveraging the power of Geospatial Analytics and GeoVisual Analytics to enhance business intelligence.\
-Analytics for data-driven business decision.\
-Building geospatial analytics toolkit by integrating spatial statistics, ESDA, and spatial modeling techniques.\
-Knowledge discovery using interactive and visual analytics tool.
+Masters of IT in business, Analytics Track
+
+Aug 2022- present
+
+![](images/shubhanshi.png)
