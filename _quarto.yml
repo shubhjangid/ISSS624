@@ -11,11 +11,14 @@ website:
             href: Hands-on_Ex1.qmd
           - text: Hands-on Excercise 1(b)
             href: Hands-on_Ex1b.qmd
+          - text: Hands-on Excercise 2
+            href: Hands-on_Ex2.qmd            
       - text: In Class Excercises
         menu: 
           - text: In class Ex 1
             href: In-class/In-class_Ex1/In-class_Ex1.qmd
           - text: In class Ex 2
+            href: In-class/In-class_Ex2/In-class_Ex2.qmd
           - text: In class Ex 3
           - text: In class Ex 4
           - text: In class Ex 5
@@ -23,6 +26,7 @@ website:
       - text: Take home Excercises
         menu: 
           - text: Take home Excercise 1
+            href: Take-Home/Take-home_Ex1/Take-home_Ex1.qmd
           - text: Take home Excercise 2
           - text: Take home Excercise 3
           - text: Take home Excercise 4
@@ -35,7 +39,8 @@ website:
 
 format:
   html:
-    theme: cosmo
+    theme: Journal
+    
     css: styles.css
     toc: true
 

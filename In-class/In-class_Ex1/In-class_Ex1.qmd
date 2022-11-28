@@ -176,7 +176,7 @@ wm_d62 <- dnearneigh(coords, 0, 62, longlat = TRUE)
 wm_d62
 ```
 
-**Quiz:** What is the meaning of \"Average number of links: 3.681818\" shown above?
+**Quiz:** What is the meaning of "Average number of links: 3.681818" shown above?
 
 It is the average of every county's neighbours.
 
@@ -245,7 +245,7 @@ ids <- lapply(dist, function(x) 1/(x))
 ids
 ```
 
-###  Row-standardised weights matrix
+### Row-standardised weights matrix
 
 ```{r}
 rswm_q <- nb2listw(wm_q, style="W", zero.policy = TRUE)
@@ -281,11 +281,11 @@ summary(unlist(rswm_ids$weights))
 
 In this section, you will learn how to create four different spatial lagged variables, they are:
 
--    spatial lag with row-standardized weights,
+-   spatial lag with row-standardized weights,
 
--    spatial lag as a sum of neighbouring values,
+-   spatial lag as a sum of neighbouring values,
 
--    spatial window average, and spatial window sum.
+-   spatial window average, and spatial window sum.
 
 ### Spatial lag with row-standardized weights
 
@@ -390,9 +390,7 @@ tmap_arrange(gdppc, w_avg_gdppc, asp=1, ncol=2)
 
 ### Spatial window sum
 
-The spatial window sum is the counter part of the window average, but
-without using row-standardized weights. To do this we assign binary
-weights to the neighbor structure that includes the diagonal element.
+The spatial window sum is the counter part of the window average, but without using row-standardized weights. To do this we assign binary weights to the neighbor structure that includes the diagonal element.
 
 ```{r}
 wm_q1 <- wm_q
