@@ -60,7 +60,7 @@ head(mpsz, n=5)
 ```
 
 | st_geometry()                             | Glimpse()                                                                             | head() and tail()                                                       |
-|---------------------|-----------------------------|----------------------|
+|-------------------------------------------|---------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | It prints the basic geometry informations | Lets you have a look at the data frame and fields are all in double-precision values. | Returns the first or last parts of a vector, matrix, table, data frame. |
 
 ## 1.5 Plotting the Geospatial Data
