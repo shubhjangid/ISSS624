@@ -1,0 +1,383 @@
+---
+title: "Take-home_Ex1"
+author: "Shubhanshi"
+editor: visual
+---
+
+```{r}
+pacman::p_load(sf, tidyverse, tmap, spdep, funModeling)
+```
+
+```{r}
+#| eval: false
+nga_Geo <- st_read(dsn = "geodata", 
+                layer = "geoBoundaries-NGA-ADM2")
+```
+
+```{r}
+#| eval: false
+ngwaterpoints  <- read_csv("aspatial/Water_Point.csv")
+```
+
+```{r}
+#| eval: false
+nga_Geo <- nga_Geo %>%
+  st_transform(crs = 26391)
+```
+
+```{r}
+#| eval: false
+ngpoint <- ngwaterpoints  %>%
+  rename ("Country" = "#clean_country_name",
+          "clean_adm2" = "#clean_adm2",
+          "status" = "#status_clean",
+          "lat" = "#lat_deg",
+          "long" = "#lon_deg") %>%
+  select (clean_adm2,status,lat,long) %>%
+  mutate(status = replace_na(status, "Unknown"))
+
+ngpoint_sf <- st_as_sf(ngpoint, coords = c("long", "lat"),  crs = 4326)
+```
+
+```{r}
+#| eval: false
+ngpoint_sf <- st_transform(ngpoint_sf, crs = 26391)
+
+st_crs (nga_Geo)
+st_crs (ngpoint_sf)
+```
+
+```{r}
+#| eval: false
+wpt_functional <- ngpoint_sf %>%
+  filter(status %in%
+           c("Functional", 
+             "Functional but not in use",
+             "Functional but needs repair"))
+```
+
+```{r}
+#| eval: false
+wpt_nonfunctional <- ngpoint_sf %>%
+  filter(status %in%
+           c("Abandoned/Decommissioned", 
+             "Abandoned",
+             "Non-Functional",
+             "Non functional due to dry season",
+             "Non-Functional due to dry season"))
+```
+
+```{r}
+#| eval: false
+wpt_unknown <- ngpoint_sf %>%
+  filter(status == "Unknown")
+```
+
+```{r}
+#| eval: false
+ngpoint_sf <- nga_Geo %>% 
+  mutate(`total wpt` = lengths(
+    st_intersects(nga_Geo, ngpoint_sf))) %>%
+  mutate(`wpt functional` = lengths(
+    st_intersects(nga_Geo, wpt_functional))) %>%
+  mutate(`wpt non-functional` = lengths(
+    st_intersects(nga_Geo, wpt_nonfunctional))) %>%
+  mutate(`wpt unknown` = lengths(
+    st_intersects(nga_Geo, wpt_unknown)))
+```
+
+```{r}
+#| eval: false
+ngpoint_sf <- ngpoint_sf %>%
+  mutate(pct_functional = `wpt functional`/`total wpt`) %>%
+  mutate(`pct_non-functional` = `wpt non-functional`/`total wpt`)
+```
+
+```{r}
+#| eval: false
+write_rds(ngpoint_sf, "data/ngpoint_sf.rds")
+```
+
+## Choropleth Mapping Geospatial Data Using tmap
+
+```{r}
+ngpoint_sf <- read_rds("data/ngpoint_sf.rds")
+total <- qtm(ngpoint_sf, "total wpt")
+wp_functional <- qtm(ngpoint_sf, 
+                     fill = "wpt functional")
+wp_nonfunctional <- qtm(ngpoint_sf,
+                        fill = "wpt non-functional")
+unknown <- qtm(ngpoint_sf,
+               fill = "wpt unknown")
+
+tmap_arrange(total, wp_functional, wp_nonfunctional, unknown, ncol=2)
+```
+
+```{r}
+equal <- tm_shape(ngpoint_sf) +
+  tm_fill("wpt non-functional",
+          n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal interval classification")
+
+quantile <- tm_shape(ngpoint_sf) +
+  tm_fill("wpt non-functional",
+          n = 5,
+          style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "quantile classification")
+
+tmap_arrange(equal, 
+             quantile, 
+             asp=1, 
+             ncol=2)
+```
+
+```{r}
+kmeans <- tm_shape(ngpoint_sf) +
+  tm_fill("wpt non-functional",
+          n = 5,
+          style = "kmeans") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Kmeans classification")
+
+fisher <- tm_shape(ngpoint_sf) +
+  tm_fill("wpt non-functional",
+          n = 5,
+          style = "fisher") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "fisher classification")
+
+tmap_arrange(kmeans, 
+             fisher, 
+             asp=1, 
+             ncol=2)
+```
+
+## Cluster and Outlier Analysis
+
+```{r}
+wp_q <- poly2nb(ngpoint_sf, 
+                queen=TRUE)
+summary(wp_q)
+```
+
+```{r}
+set.ZeroPolicyOption(TRUE)
+```
+
+```{r}
+rrwp_q <- nb2listw(wp_q, 
+                   style="W", 
+                   zero.policy = TRUE)
+rrwp_q
+```
+
+#### Computing Local Moron's I
+
+```{r}
+check <- order(ngpoint_sf$shapeName)
+localMI <- localmoran(ngpoint_sf$`wpt non-functional`, rrwp_q)
+head(localMI)
+```
+
+```{r}
+nga.localMI <- cbind(ngpoint_sf,localMI) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+```{r}
+tm_shape(nga.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          palette = "RdBu",
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+```
+
+```{r}
+tm_shape(nga.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Greens", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+```
+
+#### 
+
+Creating a LISA Cluster Map
+
+```{r}
+age <- moran.plot(ngpoint_sf$`wpt non-functional`, rrwp_q,
+                  labels=as.character(ngpoint_sf$shapeName),
+                  xlab="Non-Functional waterpoints in Nigeria", 
+                  ylab="Spatially Lag Non-functional waterpoints in Nigeria")
+```
+
+```{r}
+ngpoint_sf$Z.nonfunc <- scale(ngpoint_sf$`wpt non-functional`) %>% 
+  as.vector 
+nci2 <- moran.plot(ngpoint_sf$Z.nonfunc, rrwp_q,
+                   labels=as.character(ngpoint_sf$shapeName),
+                   xlab="functional points", 
+                   ylab="Spatially Lag non functional points")
+```
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI))
+ngpoint_sf$lag_non_func_points <- lag.listw(rrwp_q, ngpoint_sf$`wpt non-functional`)
+DV <- ngpoint_sf$lag_non_func_points - mean(ngpoint_sf$lag_non_func_points)     
+LM_I <- localMI[,1] - mean(localMI[,1])    
+signif <- 0.05       
+quadrant[DV <0 & LM_I>0] <- 1
+quadrant[DV >0 & LM_I<0] <- 2
+quadrant[DV <0 & LM_I<0] <- 3  
+quadrant[DV >0 & LM_I>0] <- 4      
+quadrant[localMI[,5]>signif] <- 0
+```
+
+#### Plotting LISA MAP
+
+```{r}
+nga.localMI$quadrant <- quadrant
+colors <- c( "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c", "#ffffff")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+tm_shape(nga.localMI) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          popup.vars = c("")) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5)
+```
+
+## Hot Spot and Cold Spot Area Analysis
+
+#### Deriving distance based weight matrix
+
+```{r}
+coords <- st_centroid(st_geometry(ngpoint_sf))
+coords[1]
+```
+
+```{r}
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords))
+summary(k1dists)
+```
+
+```{r}
+threshold <- max(unlist(nbdists(k1, coords)))
+```
+
+#### Computing Fixed distance weight matrix
+
+```{r}
+wm_d73 <- dnearneigh(coords, 0, threshold)
+wm_d73
+```
+
+```{r}
+wm62_lw <- nb2listw(wm_d73, style = 'B')
+summary(wm_d73)
+```
+
+#### Computing Inverse Adaptive distance weight matrix
+
+```{r}
+k8 <- knn2nb(knearneigh(coords, k = 8))
+k8
+```
+
+Computing Inverse Distance Weights for Fixed Distance
+
+```{r}
+distances <- nbdists(wm_d73,coords)
+distances[1]
+```
+
+```{r}
+
+```
+
+```{r}
+distances <- lapply(distances, function(x) (1/(x/1000)))
+distances[1]
+```
+
+#### Adaptive Distance
+
+```{r}
+knn <- knn2nb(knearneigh(coords, k=8))
+knn
+```
+
+```{r}
+knn_lw <- nb2listw(knn, style = 'B')
+summary(knn_lw)
+```
+
+#### Computing GI Statistics
+
+```{r}
+fips <- order(ngpoint_sf$shapeName)
+gi.fixed <- localG(ngpoint_sf$`wpt non-functional`, wm62_lw)
+nga_wp.gi <- cbind(ngpoint_sf, as.matrix(gi.fixed)) %>%
+  rename(gstat_fixed = as.matrix.gi.fixed.)
+```
+
+```{r}
+nonfunc <- qtm(ngpoint_sf, "wpt non-functional")
+
+Gimap <-tm_shape(nga_wp.gi) +
+  tm_fill(col = "gstat_fixed", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(nonfunc, Gimap, asp=1, ncol=2)
+```
+
+#### Computing adaptive distance
+
+```{r}
+fips <- order(ngpoint_sf$shapeName)
+gi.adaptive <- localG(ngpoint_sf$`wpt non-functional`, knn_lw)
+nga_wp.gi <- cbind(ngpoint_sf, as.matrix(gi.adaptive)) %>%
+  rename(gstat_adaptive = as.matrix.gi.adaptive.)
+```
+
+```{r}
+nonfunc <- qtm(ngpoint_sf, "wpt non-functional")
+
+Gimap <- tm_shape(nga_wp.gi) + 
+  tm_fill(col = "gstat_adaptive", 
+          style = "pretty", 
+          palette="-RdBu", 
+          title = "local Gi") + 
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(nonfunc, 
+             Gimap, 
+             asp=1, 
+             ncol=2)
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(ngpoint_sf$geometry, border="lightgrey", main="Adaptive Distance (8)")
+plot(k8, coords, add=TRUE, col="green", length=0.08)
+plot(ngpoint_sf$geometry, border="pink", main="Fixed Distance")
+plot(wm_d73, coords, add=TRUE, pch = 19, cex = 0.6)
+```
+
+## Conclusion
+
+In order to more effectively allocate their limited resources to address any concerns, organizations continue to rely heavily on geospatial autocorrelation.
+
+Organizations will be able to improve the quality of decision-making by using LISA and Gi maps to better comprehend the spatial link based on the attribute being studied.
