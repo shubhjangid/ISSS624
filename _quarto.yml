@@ -28,7 +28,7 @@ website:
             href: In-class/In-class_Ex2/In-class_Ex2.qmd
           - text: In class Ex (Spatially Constrained Clustering with ClustGeo)
             href: In-class/In-class_Ex3/In-class_Ex3.qmd
-          - text: In class Ex 4
+          - text: In class Ex 4 (Calibrating Hedonic Pricing Model with GWR Method, updated)
             href: In-class/In-class_Ex4/In-class_Ex4.qmd
           - text: In class Ex 5
             href: In-class/In-class_Ex5/In-class_Ex5.qmd
@@ -38,8 +38,6 @@ website:
           - text: Take home Excercise 1
             href: Take-Home/Take-home_Ex1/Take-home_Ex1.qmd
           - text: Take home Excercise 2
-          - text: Take home Excercise 3
-          - text: Take home Excercise 4
           
             
     right:

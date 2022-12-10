@@ -1,7 +1,27 @@
 ---
-title: "In-class_Ex2"
+title: "In-class_Ex2: water points positively co-occur in Nigeria"
 author: "Shubhanshi"
 editor: visual
 ---
 
-hello
+## Overview
+
+This is a direct reproduction of In-class Exercise 2 of our class ISSS624: Geospatial Analytics and Applications as taught by Prof. Kam Tin Seong. It is also a precursor to Take-home Exercise 1.
+
+## Getting Started
+
+### Loading the required packages
+
+```{r}
+pacman::p_load(sf, tidyverse, tmap, funModeling, sfdep)
+```
+
+## Importing geospatial data
+
+### Importing water point geospatial data
+
+The code chunk below imports water point data from geo_export and filters it to those in Nigera using filter().
+
+```{r}
+wp_nga <- read_rds("data/ngpoint_sf.rds")
+```
