@@ -230,6 +230,7 @@ tmap_mode("view")
 ```
 
 ```{r}
+#| eval: false
 tm_shape(mpsz_svy21)+
   tm_polygons() +
 tm_shape(condo_resale.sf) +  
