@@ -1,6 +1,7 @@
 ---
 title: "Hands-on_Ex3: Geographical Segmentation with Spatially Constrained Clustering Techniques"
 editor: visual
+date: "r Sys.data()"
 ---
 
 ## 1 Overview
@@ -35,7 +36,7 @@ In geobusiness and spatial policy, it is a common practice to delineate the mark
 
 Two data sets will be used in this study. They are:
 
--    Myanmar Township Boundary Data (i.e. myanmar_township_boundaries) : This is a GIS data in ESRI shapefile format. It consists of township boundary information of Myanmar. The spatial data are captured in polygon features.
+-   Myanmar Township Boundary Data (i.e. myanmar_township_boundaries) : This is a GIS data in ESRI shapefile format. It consists of township boundary information of Myanmar. The spatial data are captured in polygon features.
 
 -   Shan-ICT.csv: This is an extract of The 2014 Myanmar Population and Housing Census Myanmar at the township level.
 
@@ -277,11 +278,7 @@ The code chunks below are used to prepare the choroplethby using the qtm() funct
 qtm(shan_sf, "RADIO_PR")
 ```
 
-In order to reveal the distribution shown in the choropleth map above
-are bias to the underlying total number of households at the townships,
-we will create two choropleth maps, one for the total number of
-households (i.e. TT_HOUSEHOLDS.map) and one for the total number of
-household with Radio (RADIO.map) by using the code chunk below.
+In order to reveal the distribution shown in the choropleth map above are bias to the underlying total number of households at the townships, we will create two choropleth maps, one for the total number of households (i.e. TT_HOUSEHOLDS.map) and one for the total number of household with Radio (RADIO.map) by using the code chunk below.
 
 ```{r}
 TT_HOUSEHOLDS.map <- tm_shape(shan_sf) + 
@@ -488,11 +485,11 @@ Another technical challenge face by data analyst in performing clustering analys
 
 There are three commonly used methods to determine the optimal clusters, they are:
 
--    Elbow Method
+-   Elbow Method
 
--    Average Silhouette Method
+-   Average Silhouette Method
 
--    Gap Statistic Method
+-   Gap Statistic Method
 
 #### 7.9.1 Gap Statistic Method
 
@@ -587,11 +584,11 @@ In order to visualise the clusters, the groups object need to be appended onto s
 
 The code chunk below form the join in three steps:
 
--    the groups list object will be converted into a matrix;
+-   the groups list object will be converted into a matrix;
 
--    cbind() is used to append groups matrix onto shan_sf to produce an output simple feature object called shan_sf_cluster; and
+-   cbind() is used to append groups matrix onto shan_sf to produce an output simple feature object called shan_sf_cluster; and
 
--    rename of dplyr package is used to rename as.matrix.groups field as CLUSTER.
+-   rename of dplyr package is used to rename as.matrix.groups field as CLUSTER.
 
 ```{r}
 shan_sf_cluster <- cbind(shan_sf, as.matrix(groups)) %>%

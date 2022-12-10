@@ -3,3 +3,128 @@ title: "In-class_Ex3"
 author: "Shubhanshi"
 editor: visual
 ---
+
+## 1 Getting started
+
+```{r}
+pacman::p_load(rgdal, spdep, tmap, sf, ggpubr, cluster, factoextra, NbClust, heatmaply, corrplot, psych, tidyverse, ClustGeo, GGally)
+```
+
+## 2 Importing data
+
+n this section, you will import Myanmar Township Boundary GIS data and its associated attrbiute table into R environment.
+
+The Myanmar Township Boundary GIS data is in ESRI shapefile format. It will be imported into R environment by using the st_read() function of sf.
+
+The code chunks used are shown below:
+
+```{r}
+shan_sf <- read_rds('data/shan_sf.rds')
+```
+
+```{r}
+shan_sf
+```
+
+## Hierarchical CLustering.
+
+```{r}
+cluster_vars <- shan_sf %>%
+  st_set_geometry(NULL) %>%
+  select("TS.x", "RADIO_PR", "TV_PR", "LLPHONE_PR", "MPHONE_PR", "COMPUTER_PR")
+
+row.names(cluster_vars) <- cluster_vars$"TS.x"
+
+shan_ict <- select(cluster_vars, c(2:6))
+
+head(shan_ict, n=5)
+```
+
+```{r}
+proxmat <- dist(shan_ict, method = 'euclidean')
+```
+
+```{r}
+nongeo_cluster <- hclustgeo(proxmat)
+
+plot(nongeo_cluster, cex = 0.5)
+rect.hclust(nongeo_cluster, 
+            k = 6, 
+            border = 2:5)
+```
+
+## Mapping the clusters formed
+
+```{r}
+groups <- as.factor(cutree(nongeo_cluster, k=6))
+
+shan_sf_ngeo_cluster <- cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+
+qtm(shan_sf_ngeo_cluster, "CLUSTER", fill.palette = "Pastel1")
+```
+
+## Spatially Constrained Hierarchical Clustering
+
+```{r}
+dist <- st_distance(shan_sf, shan_sf)
+
+distmat <- as.dist(dist)
+```
+
+```{r}
+cr <- choicealpha(proxmat, 
+                  distmat, 
+                  range.alpha = seq(0, 1, 0.1), 
+                  K=6, 
+                  graph = TRUE)
+```
+
+```{r}
+clustG <- hclustgeo(proxmat, distmat, alpha = 0.3)
+
+groups <- as.factor(cutree(clustG, k=6))
+
+shan_sf_Gcluster <- cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+
+qtm(shan_sf_Gcluster, "CLUSTER", fill.palette = "Pastel1")
+```
+
+## Visualizing Individual Cluster Variables
+
+```{r}
+ggplot(data = shan_sf_ngeo_cluster,
+       aes(x = CLUSTER, y = RADIO_PR, fill = CLUSTER)) +
+  scale_fill_manual(values = c("#fec0ce",
+                                "#e3879e",
+                                "#cb6a82",
+                                "#704276",
+                                "#af7cb6",
+                                "#e7d8e9")) +
+  geom_boxplot()
+```
+
+## Multivariate Visualization
+
+```{r}
+ggparcoord(data = shan_sf_ngeo_cluster, 
+           columns = c(17:21), 
+           scale = "globalminmax",
+           alphaLines = 0.2,
+           boxplot = TRUE, 
+           title = "Multiple Parallel Coordinates Plots of ICT Variables by Cluster") +
+  facet_grid(~ CLUSTER) + 
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+shan_sf_ngeo_cluster %>% 
+  st_set_geometry(NULL) %>%
+  group_by(CLUSTER) %>%
+  summarise(mean_RADIO_PR = mean(RADIO_PR),
+            mean_TV_PR = mean(TV_PR),
+            mean_LLPHONE_PR = mean(LLPHONE_PR),
+            mean_MPHONE_PR = mean(MPHONE_PR),
+            mean_COMPUTER_PR = mean(COMPUTER_PR))
+```
