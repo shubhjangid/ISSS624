@@ -3,3 +3,326 @@ title: "In-class_Ex5"
 author: "Shubhanshi"
 editor: visual
 ---
+
+## Setting the scene
+
+To build an exploratory model to discover factor affecting water point status in Osun State, Nigeria.
+
+Study are: Osun State, Nigeria
+
+### Data Sets:
+
+**Osun.rds**, contains LGAs boundaries of Osun State. It is in sf polygon data frame, and
+
+**Osun_wp_sf.rds**, contains water points within Osun State. It is in sf point data frame.
+
+## Model Variables
+
+-   Dependent Variables: Water point status(ie. functional/non-functional)
+
+-   Independent Variables:
+
+    -   distance_to_primary_road
+
+    -   distance_to_secondary_road
+
+    -   distance_to_tertiary_road
+
+    -   distance_to_city
+
+    -   distance_to_town
+
+    -   water_point_population
+
+    -   local_population_1Km
+
+    -   usage_capacity
+
+    -   is_urban
+
+    -   water_source_clean
+
+## Installing R Packages
+
+Using the code chunk, following packages will be installed into R environment
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse,funModeling,blorr,corrplot,ggpubr,GWmodel, skimr, caret)
+```
+
+## Data Import
+
+In this class exercise, two data sets will be used.They are:
+
+### Importing analytical data
+
+First, we are going to import the analytical data into R environment.
+
+```{r}
+Osun <- read_rds("rds/Osun.rds")
+Osun_wp_sf <- read_rds("rds/Osun_wp_sf.rds")
+```
+
+```{r}
+Osun_wp_sf %>%
+  freq(input="status")
+```
+
+From the above chart, it can interpreted that there are 2642 observation of "Functional water points" and 2118 observations of "Non-Functional Water points".
+
+```{r}
+tmap_mode("view")
+tm_shape(Osun)+
+  tm_polygons(alpha=0.4) + 
+tm_shape(Osun_wp_sf) +
+  tm_dots(col="status",
+          alpha = 0.6) +
+  tm_view (set.zoom.limits = c(9,12))
+```
+
+# Exploratory Data Analysis
+
+## Summary Statistics with Skimr
+
+```{r}
+Osun_wp_sf%>%
+  skim()
+```
+
+```{r}
+Osun_wp_sf_clean <- Osun_wp_sf%>%
+  filter_at(vars(status,
+                 distance_to_primary_road,
+                 distance_to_secondary_road,
+                 distance_to_tertiary_road,
+                 distance_to_city,
+                 distance_to_town,
+                 water_point_population,
+                 local_population_1km,
+                 usage_capacity,
+                 is_urban,
+                 water_source_clean),
+            all_vars(!is.na(.)))%>%
+  mutate(usage_capacity = as.factor(usage_capacity))
+```
+
+After the above code chunk run, it can be observed 4 observations are deleted and now there are total of 4756 observations with 75 columns.
+
+# Correlation Analysis
+
+```{r}
+Osun_wp <- Osun_wp_sf_clean%>%
+  select(c(7,35:39,42,43,46,47,57))%>%
+  st_set_geometry(NULL)
+```
+
+```{r}
+cluster_vars.cor= cor(
+  Osun_wp[,2:7])
+corrplot.mixed(cluster_vars.cor,
+               lower= "ellipse",
+               upper= "number",
+               tl.pos= "lt",
+               diag= "l",
+               tl.col= "black")
+```
+
+From the above result, it can observed there are none of the variables that are highly correlated, i.e. correlation greater than +/- 0.8. Therefore, we will consider all the variables for the further analysis.
+
+# Building a Logistic Regression Models
+
+```{r}
+model <- glm(status ~ distance_to_primary_road+
+               distance_to_secondary_road+
+               distance_to_tertiary_road+
+               distance_to_city+
+               distance_to_town+
+               is_urban+
+               usage_capacity+
+               water_source_clean+
+               water_point_population+
+              local_population_1km,
+             data= Osun_wp_sf_clean,
+             family= binomial(link= "logit"))
+```
+
+Instead of using typical R report, **blr_regress() of blorr** package is used.
+
+```{r}
+blr_regress(model)
+```
+
+------------------------------------------------------------------------
+
+From the model report, we observed that distance_to_primary_road and distance_to_secondary_road are not statistically significant (p value \> 0.05). Therefore, these variables will be excluded for further analysis as they are not significant.
+
+```{r}
+model_adjust <- glm(status ~
+               distance_to_tertiary_road+
+               distance_to_city+
+               distance_to_town+
+               is_urban+
+               usage_capacity+
+               water_source_clean+
+               water_point_population+
+               local_population_1km,
+             data=Osun_wp_sf_clean,
+             family=binomial(link="logit"))
+```
+
+```{r}
+blr_regress(model_adjust)
+```
+
+```{r}
+blr_confusion_matrix(model, cutoff= 0.5)
+```
+
+The validity of a cutoff is measured using sensitivity, specificity and accuracy.
+
+1.  **Sensitivity**: The % of correctly classified events out of all events= TP/(TP+FN)
+2.  **Specificity**: The % of correctly classified non-events out of all events= TN/(TN+FP)
+3.  **Accuracy**: The % of correctly classified observation over all observations= (TP+TN)/ (TP+FP+FN+TN)
+4.  
+
+```{r}
+blr_confusion_matrix(model_adjust,cutoff=0.5)
+```
+
+The updated version of the first model yields slightly lower results of 0.7188 and 0.6149, while the original model is able to attain sensitivity and specificity values of 0.7207 and 0.6154.
+
+These are good results, but they can be made much better by taking geographic considerations into account. In the following section, we will examine how to perform logistic regression that is weighted spatially.
+
+# Building Fixed Bandwidth GWR Model
+
+## Converting sf data frame to sp data frame
+
+```{r}
+Osun_wp_sp <- Osun_wp_sf_clean%>%
+  select(c(status,
+           distance_to_primary_road,
+           distance_to_secondary_road,
+           distance_to_tertiary_road,
+           distance_to_city,
+           distance_to_town,
+           water_point_population,
+           local_population_1km,
+           is_urban,
+           usage_capacity,
+           water_source_clean))%>%
+  as_Spatial()
+Osun_wp_sp
+```
+
+## Computing Fixed Bandwidth
+
+Adjusted one:
+
+```{r}
+#| eval: false
+bw.fixed <- bw.ggwr(status ~
+               distance_to_tertiary_road+
+               distance_to_city+
+               distance_to_town+
+               is_urban+
+               usage_capacity+
+               water_source_clean+
+               water_point_population+
+               local_population_1km,
+             data=Osun_wp_sp,
+             family="binomial",
+             approach = "AIC",
+             kernel = "gaussian",
+             adaptive = FALSE,
+             longlat = FALSE)
+```
+
+```{r}
+#| eval: false
+bw.fixed
+```
+
+```{r}
+gwlr.fixed <- ggwr.basic(status ~
+                      distance_to_primary_road+
+                      distance_to_secondary_road+
+                      distance_to_tertiary_road+
+                      distance_to_city+
+                      distance_to_town+
+                      water_point_population+
+                      local_population_1km+
+                      is_urban+
+                      usage_capacity+
+                      water_source_clean,
+                    data= Osun_wp_sp,
+                    bw= 2377.371,
+                    family= "binomial",
+                    kernel= "gaussian",
+                    adaptive= FALSE,
+                    longlat= FALSE)
+
+```
+
+# Model Assessment
+
+## Converting SDF into sf data.frame
+
+To assess the performance of the gwLR, firstly, we will convert the SDF object in as data frame by using the code chunk below.
+
+```{r}
+gwr.fixed <- as.data.frame(gwlr.fixed$SDF)
+```
+
+Next, we will label that values greater or equal to 0.5 into 1, else 0. The result the logic comparison operation will be saved into a field called most.
+
+```{r}
+gwr.fixed <- gwr.fixed %>%
+  mutate(most= ifelse(
+    gwr.fixed$yhat >= 0.5, T, F))
+```
+
+```{r}
+gwr.fixed$y <- as.factor(gwr.fixed$y)
+gwr.fixed$most <- as.factor(gwr.fixed$most)
+CM <- confusionMatrix(data=gwr.fixed$most, reference= gwr.fixed$y)
+CM
+```
+
+Geographical information is added to the logistic regression model, which considerably improves the model's findings. The model's overall accuracy is 0.8846 with improved sensitivity and specificity scores of 0.8789 and 0.9145, respectively. This is a significant improvement over the prior model without any consideration of geography.
+
+## Visualizing gwLR
+
+Next, we will display the values of yhat from GWLR model using interactive tmap mode. The following columns will be first selected to facilitate the plotting of the map.
+
+```{r}
+Osun_wp_sf_selected <- Osun_wp_sf_clean %>%
+  select(c(ADM2_EN,ADM2_PCODE,ADM1_EN,ADM1_PCODE,status))
+```
+
+```{r}
+gwr_sf.fixed <- cbind(Osun_wp_sf_selected,gwr.fixed)
+```
+
+```{r}
+tmap_mode("view")
+prob_T <- tm_shape(Osun) +
+  tm_polygons(alpha=0.1) +
+  tm_shape(gwr_sf.fixed) +
+  tm_dots(col = "yhat",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(9,12))
+
+prob_T
+```
+
+```{r}
+tertiary_TV <- tm_shape(Osun)+
+  tm_polygons(alpha=0.1)+
+  tm_shape(gwr_sf.fixed)+
+  tm_dots(col="distance_to_tertiary_road_TV",
+          border.col="gray60",
+          border.lwd=1)+
+  tm_view(set.zoom.limits=c(9,12))
+tertiary_TV
+```
