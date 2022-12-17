@@ -38,6 +38,7 @@ website:
           - text: Take home Excercise 1
             href: Take-Home/Take-home_Ex1/Take-home_Ex1.qmd
           - text: Take home Excercise 2
+            href: Take-Home/Take-home_Ex2/Take-home_Ex2.qmd
           
             
     right:

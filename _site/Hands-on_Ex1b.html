@@ -203,7 +203,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a class="dropdown-item" href="./Take-Home/Take-home_Ex1/Take-home_Ex1.html">
  <span class="dropdown-text">Take home Excercise 1</span></a>
   </li>  
-        <li class="dropdown-header">Take home Excercise 2</li>
+        <li>
+    <a class="dropdown-item" href="./Take-Home/Take-home_Ex2/Take-home_Ex2.html">
+ <span class="dropdown-text">Take home Excercise 2</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -382,18 +385,13 @@ dbl (2): Pop, Time
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">ECONOMY ACTIVE</span><span class="st">`</span> <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: `funs()` was deprecated in dplyr 0.8.0.
-Please use a list of either functions or lambdas: 
+ℹ Please use a list of either functions or lambdas:
 
-  # Simple named list: 
-  list(mean = mean, median = median)
+# Simple named list: list(mean = mean, median = median)
 
-  # Auto named with `tibble::lst()`: 
-  tibble::lst(mean, median)
+# Auto named with `tibble::lst()`: tibble::lst(mean, median)
 
-  # Using lambdas
-  list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))
-This warning is displayed once every 8 hours.
-Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.</code></pre>
+# Using lambdas list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))</code></pre>
 </div>
 </div>
 <div class="cell">
